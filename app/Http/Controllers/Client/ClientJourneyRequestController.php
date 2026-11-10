@@ -60,7 +60,7 @@ class ClientJourneyRequestController extends Controller
 
         $step->update([
             'payload' => $payload,
-            'status' => 'submitted',
+            'status' => 'pending', // Keeps SQLite CHECK constraint valid (status in 'pending', 'done')
             'review_status' => 'submitted',
             'submitted_at' => now(),
         ]);

@@ -232,13 +232,13 @@
         <div class="stages-flow">
             @php
                 $steps = $selectedLead->journeySteps->sortBy('step_order');
-                $firstPending = $steps->firstWhere('status', '!=', 'done');
+                $firstPending = $steps->first(fn($s) => $s->status !== 'done' && $s->review_status !== 'approved');
             @endphp
 
             @foreach($steps as $step)
                 @php
-                    $isDone = $step->status === 'done';
-                    $isRevision = $step->status === 'needs_revision';
+                    $isDone = $step->status === 'done' || $step->review_status === 'approved';
+                    $isRevision = $step->review_status === 'revision_required' || $step->status === 'needs_revision';
                     $isActive = $firstPending && $firstPending->id === $step->id;
                     $class = $isDone ? 'done' : ($isRevision ? 'revision' : ($isActive ? 'active' : 'pending'));
                 @endphp
@@ -265,11 +265,16 @@
 
         <div style="display:flex; flex-direction:column; gap:14px; margin-top:16px;">
             @foreach($steps as $step)
-                <div style="border: 1px solid {{ $step->status === 'needs_revision' ? 'var(--wn)' : 'var(--bd)' }}; border-radius:10px; padding:14px; background: {{ $step->status === 'done' ? '#fcfdfd' : '#fff' }};">
+                @php
+                    $isDone = $step->status === 'done' || $step->review_status === 'approved';
+                    $isRevision = $step->review_status === 'revision_required' || $step->status === 'needs_revision';
+                    $isSubmitted = $step->review_status === 'submitted';
+                @endphp
+                <div style="border: 1px solid {{ $isRevision ? 'var(--wn)' : 'var(--bd)' }}; border-radius:10px; padding:14px; background: {{ $isDone ? '#fcfdfd' : '#fff' }};">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                         <div>
-                            <span class="tag {{ $step->status === 'done' ? 'ok' : ($step->status === 'needs_revision' ? 'wn' : ($step->status === 'submitted' ? '' : 'mu')) }}" style="font-size:10.5px;">
-                                Stage {{ $step->step_order }}: {{ strtoupper($step->status) }}
+                            <span class="tag {{ $isDone ? 'ok' : ($isRevision ? 'wn' : ($isSubmitted ? '' : 'mu')) }}" style="font-size:10.5px;">
+                                Stage {{ $step->step_order }}: {{ $isDone ? 'APPROVED' : ($isRevision ? 'NEEDS REVISION' : ($isSubmitted ? 'SUBMITTED' : 'PENDING')) }}
                             </span>
                             <strong style="font-size:14px; margin-left:6px;">{{ $step->title }}</strong>
                         </div>

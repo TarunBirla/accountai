@@ -70,10 +70,11 @@ class ClientDashboardController extends Controller
         if ($requestedStepOrder > 0 && $steps->firstWhere('step_order', $requestedStepOrder)) {
             $currentStep = $steps->firstWhere('step_order', $requestedStepOrder);
         } else {
-            // Default to first pending or revision-required step, or step 1
-            $currentStep = $steps->firstWhere('status', 'needs_revision')
+            // Default to first revision-required or pending or submitted step, or step 1
+            $currentStep = $steps->firstWhere('review_status', 'revision_required')
+                ?? $steps->firstWhere('status', 'needs_revision')
                 ?? $steps->firstWhere('status', 'pending')
-                ?? $steps->firstWhere('status', 'submitted')
+                ?? $steps->firstWhere('review_status', 'submitted')
                 ?? $steps->first();
         }
 
@@ -94,7 +95,7 @@ class ClientDashboardController extends Controller
 
         $step->update([
             'payload' => $payload,
-            'status' => 'submitted',
+            'status' => 'pending', // Keeps SQLite CHECK constraint valid
             'review_status' => 'submitted',
             'submitted_at' => now(),
         ]);

@@ -54,23 +54,26 @@ class AdminJourneyController extends Controller
 
         $step = JourneyStep::with('lead.journeySteps')->findOrFail($stepId);
 
-        $updateData = [
-            'status' => $request->status,
-        ];
+        $updateData = [];
 
         if ($request->status === 'done') {
+            $updateData['status'] = 'done';
             $updateData['review_status'] = 'approved';
             $updateData['approved_at'] = now();
             $updateData['admin_notes'] = null; // Clear revision note on approval
         } elseif ($request->status === 'needs_revision') {
+            $updateData['status'] = 'pending'; // Safe for SQLite CHECK (status in ('pending', 'done'))
             $updateData['review_status'] = 'revision_required';
             $updateData['admin_notes'] = $request->admin_notes;
+        } else {
+            $updateData['status'] = 'pending';
+            $updateData['review_status'] = $request->status;
         }
 
         $step->update($updateData);
 
         // Check if all 12 steps done -> convert lead
-        $allDone = $step->lead->journeySteps->every(fn($s) => $s->id == $step->id ? $request->status === 'done' : $s->status === 'done');
+        $allDone = $step->lead->journeySteps->every(fn($s) => $s->id == $step->id ? $request->status === 'done' : ($s->status === 'done' || $s->review_status === 'approved'));
         if ($allDone && $step->lead->status !== 'converted') {
             $step->lead->update(['status' => 'converted']);
         }

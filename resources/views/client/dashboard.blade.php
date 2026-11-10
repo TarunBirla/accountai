@@ -219,12 +219,12 @@
 
         <div class="stages-flow">
             @php
-                $firstPending = $steps->firstWhere('status', '!=', 'done');
+                $firstPending = $steps->first(fn($s) => $s->status !== 'done' && $s->review_status !== 'approved');
             @endphp
             @foreach($steps as $st)
                 @php
-                    $isDone = $st->status === 'done';
-                    $isRevision = $st->status === 'needs_revision';
+                    $isDone = $st->status === 'done' || $st->review_status === 'approved';
+                    $isRevision = $st->review_status === 'revision_required' || $st->status === 'needs_revision';
                     $isActive = ($currentStep && $currentStep->id === $st->id) || (!$currentStep && $firstPending && $firstPending->id === $st->id);
                     $class = $isDone ? 'done' : ($isRevision ? 'revision' : ($isActive ? 'active' : 'pending'));
                 @endphp
@@ -255,9 +255,9 @@
                 $payload = is_array($step->payload) ? $step->payload : [];
                 $order = $step->step_order;
                 $isCurrent = $currentStep && $currentStep->id === $step->id;
-                $isRevision = $step->status === 'needs_revision';
-                $isDone = $step->status === 'done';
-                $isSubmitted = $step->status === 'submitted';
+                $isDone = $step->status === 'done' || $step->review_status === 'approved';
+                $isRevision = $step->review_status === 'revision_required' || $step->status === 'needs_revision';
+                $isSubmitted = $step->review_status === 'submitted';
             @endphp
 
             <div id="stage-panel-{{ $order }}" class="stage-panel step-box {{ $isRevision ? 'revision-box' : '' }}" style="display: {{ $isCurrent ? 'block' : 'none' }};">
