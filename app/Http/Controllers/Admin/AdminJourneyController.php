@@ -9,24 +9,108 @@ use Illuminate\Http\Request;
 
 class AdminJourneyController extends Controller
 {
+    /**
+     * Requirement 2: Clean User List first on /admin/journey
+     */
     public function index(Request $request)
     {
-        $leads = Lead::with(['journeySteps', 'services'])->latest()->paginate(15);
+        $query = Lead::with(['journeySteps', 'services', 'user'])->latest();
 
-        $selectedLeadId = $request->query('lead_id');
-        $selectedLead = $selectedLeadId 
-            ? Lead::with(['journeySteps', 'services'])->find($selectedLeadId) 
-            : $leads->first();
-
-        // If selected lead exists but has fewer than 12 steps (e.g. from early testing), ensure all 12 stages exist
-        if ($selectedLead && $selectedLead->journeySteps->count() < 12) {
-            $this->ensureTwelveStages($selectedLead);
-            $selectedLead->load('journeySteps');
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('first_name', 'like', "%{$s}%")
+                  ->orWhere('last_name', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('company_name', 'like', "%{$s}%");
+            });
         }
 
-        return view('admin.journey.index', compact('leads', 'selectedLead'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $leads = $query->paginate(15)->withQueryString();
+
+        return view('admin.journey.index', compact('leads'));
     }
 
+    /**
+     * Requirement 2: Dedicated 12 Stages View for a single lead
+     */
+    public function show($leadId)
+    {
+        $lead = Lead::with(['journeySteps' => function ($q) {
+            $q->orderBy('step_order', 'asc');
+        }, 'services', 'user'])->findOrFail($leadId);
+
+        // Ensure lead has all 12 stages
+        if ($lead->journeySteps->count() < 12) {
+            $this->ensureTwelveStages($lead);
+            $lead->load('journeySteps');
+        }
+
+        $activeStep = $lead->journeySteps->firstWhere('status', 'pending');
+
+        return view('admin.journey.show', compact('lead', 'activeStep'));
+    }
+
+    /**
+     * Requirement 1: Approve Step or Request Revision with Note
+     */
+    public function reviewStep(Request $request, $stepId)
+    {
+        $request->validate([
+            'action' => ['required', 'in:approve,revision'],
+            'admin_notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $step = JourneyStep::with('lead.journeySteps')->findOrFail($stepId);
+        $lead = $step->lead;
+
+        if ($request->action === 'approve') {
+            $step->update([
+                'status' => 'done',
+                'review_status' => 'approved',
+                'approved_at' => now(),
+                'admin_notes' => $request->admin_notes ?: $step->admin_notes,
+            ]);
+
+            // Unlock next stage for the client
+            $nextStep = $lead->journeySteps->firstWhere('step_order', $step->step_order + 1);
+            if ($nextStep) {
+                $nextStep->update([
+                    'review_status' => 'action_required',
+                ]);
+            } else {
+                // All 12 completed!
+                $lead->update(['status' => 'converted']);
+            }
+
+            return back()->with('success', "Stage '{$step->title}' approved! Next stage is now unlocked for the client.");
+        }
+
+        if ($request->action === 'revision') {
+            $request->validate([
+                'admin_notes' => ['required', 'string', 'min:3'],
+            ], [
+                'admin_notes.required' => 'Please provide feedback notes explaining what the client needs to correct.',
+            ]);
+
+            $step->update([
+                'review_status' => 'revision_required',
+                'admin_notes' => $request->admin_notes,
+            ]);
+
+            return back()->with('success', "Stage '{$step->title}' returned to client for revision with your feedback note.");
+        }
+
+        return back();
+    }
+
+    /**
+     * Fallback manual status toggle
+     */
     public function updateStepStatus(Request $request, $stepId)
     {
         $request->validate([
@@ -34,12 +118,19 @@ class AdminJourneyController extends Controller
         ]);
 
         $step = JourneyStep::with('lead.journeySteps')->findOrFail($stepId);
-        $step->update(['status' => $request->status]);
+        $newStatus = $request->status;
 
-        // If all 12 steps done, set lead to converted
-        $allDone = $step->lead->journeySteps->every(fn($s) => $s->id == $step->id ? $request->status === 'done' : $s->status === 'done');
-        if ($allDone && $step->lead->status !== 'converted') {
-            $step->lead->update(['status' => 'converted']);
+        $step->update([
+            'status' => $newStatus,
+            'review_status' => $newStatus === 'done' ? 'approved' : 'action_required',
+            'approved_at' => $newStatus === 'done' ? now() : null,
+        ]);
+
+        if ($newStatus === 'done') {
+            $nextStep = $step->lead->journeySteps->firstWhere('step_order', $step->step_order + 1);
+            if ($nextStep) {
+                $nextStep->update(['review_status' => 'action_required']);
+            }
         }
 
         return back()->with('success', "Stage '{$step->title}' updated to " . ucfirst($step->status));
@@ -69,7 +160,9 @@ class AdminJourneyController extends Controller
                     'title' => $stageData['title'],
                     'description' => $stageData['description'],
                     'status' => $order === 1 ? 'done' : 'pending',
+                    'review_status' => $order === 1 ? 'approved' : ($order === 2 ? 'action_required' : 'locked'),
                     'step_order' => $order,
+                    'approved_at' => $order === 1 ? now() : null,
                 ]);
             }
         }

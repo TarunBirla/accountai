@@ -66,6 +66,8 @@ class SampleLeadSeeder extends Seeder
                     'title' => $data['title'],
                     'description' => $data['description'],
                     'status' => $data['status'],
+                    'review_status' => $data['status'] === 'done' ? 'approved' : 'action_required',
+                    'approved_at' => $data['status'] === 'done' ? now() : null,
                 ]
             );
         }

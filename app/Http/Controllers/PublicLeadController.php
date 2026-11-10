@@ -95,18 +95,18 @@ class PublicLeadController extends Controller
 
             // Exactly 12 Connected Journey Stages (as per AccountAI Practice OS design)
             $stages = [
-                ['title' => 'Lead & enquiry', 'description' => 'Lead ID created, source tagged, intent classified and routed to branch. Acknowledgement sent.', 'status' => 'done', 'step_order' => 1],
-                ['title' => 'Qualification', 'description' => 'Questionnaire sent. Suggested annual accounts, corporation tax, VAT or payroll mapped.', 'status' => 'pending', 'step_order' => 2],
-                ['title' => 'Consultation & quote', 'description' => 'Consultation notes, pricing template and proposal generated. Customer accepts online.', 'status' => 'pending', 'step_order' => 3],
-                ['title' => 'Registration', 'description' => 'Customer ID and secure portal created. Duplicate accounts prevented.', 'status' => 'pending', 'step_order' => 4],
-                ['title' => 'AML & compliance', 'description' => 'ID verification and risk assessment. Compliance officer approval is required.', 'status' => 'pending', 'step_order' => 5],
-                ['title' => 'Engagement', 'description' => 'Engagement letter generated from approved template and e-signed.', 'status' => 'pending', 'step_order' => 6],
-                ['title' => 'Payment', 'description' => 'Invoice and payment link sent. Webhook updates payment status automatically.', 'status' => 'pending', 'step_order' => 7],
-                ['title' => 'Document collection', 'description' => 'Personalised checklist, OCR classification, duplicate and readability checks.', 'status' => 'pending', 'step_order' => 8],
-                ['title' => 'Clarification', 'description' => 'Automated queries for missing periods and unclear items, linked to the case.', 'status' => 'pending', 'step_order' => 9],
-                ['title' => 'Allocation', 'description' => 'Release checks pass. Case allocated by skill, workload and deadline.', 'status' => 'pending', 'step_order' => 10],
-                ['title' => 'Processing & review', 'description' => 'Accountant works in existing accounting software. Reviewer approves.', 'status' => 'pending', 'step_order' => 11],
-                ['title' => 'Completion', 'description' => 'Delivery confirmed, payment reconciled, next-cycle reminders scheduled.', 'status' => 'pending', 'step_order' => 12],
+                ['title' => 'Lead & enquiry', 'description' => 'Lead ID created, source tagged, intent classified and routed to branch. Acknowledgement sent.', 'status' => 'done', 'review_status' => 'approved', 'approved_at' => now(), 'step_order' => 1],
+                ['title' => 'Qualification', 'description' => 'Questionnaire sent. Suggested annual accounts, corporation tax, VAT or payroll mapped.', 'status' => 'pending', 'review_status' => 'action_required', 'step_order' => 2],
+                ['title' => 'Consultation & quote', 'description' => 'Consultation notes, pricing template and proposal generated. Customer accepts online.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 3],
+                ['title' => 'Registration', 'description' => 'Customer ID and secure portal created. Duplicate accounts prevented.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 4],
+                ['title' => 'AML & compliance', 'description' => 'ID verification and risk assessment. Compliance officer approval is required.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 5],
+                ['title' => 'Engagement', 'description' => 'Engagement letter generated from approved template and e-signed.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 6],
+                ['title' => 'Payment', 'description' => 'Invoice and payment link sent. Webhook updates payment status automatically.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 7],
+                ['title' => 'Document collection', 'description' => 'Personalised checklist, OCR classification, duplicate and readability checks.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 8],
+                ['title' => 'Clarification', 'description' => 'Automated queries for missing periods and unclear items, linked to the case.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 9],
+                ['title' => 'Allocation', 'description' => 'Release checks pass. Case allocated by skill, workload and deadline.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 10],
+                ['title' => 'Processing & review', 'description' => 'Accountant works in existing accounting software. Reviewer approves.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 11],
+                ['title' => 'Completion', 'description' => 'Delivery confirmed, payment reconciled, next-cycle reminders scheduled.', 'status' => 'pending', 'review_status' => 'locked', 'step_order' => 12],
             ];
 
             foreach ($stages as $stageData) {

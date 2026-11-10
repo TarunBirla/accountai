@@ -68,6 +68,9 @@ main{padding:22px 28px 60px;min-width:0}
             <a href="{{ route('client.dashboard') }}" class="{{ request()->routeIs('client.dashboard') ? 'on' : '' }}">
                 <span>◧</span> My Dashboard &amp; Leads
             </a>
+            <a href="{{ route('client.requests.index') }}" class="{{ request()->routeIs('client.requests.*') ? 'on' : '' }}">
+                <span>📋</span> Action Requests
+            </a>
             <a href="{{ route('client.profile') }}" class="{{ request()->routeIs('client.profile') ? 'on' : '' }}">
                 <span>👤</span> Account &amp; Security
             </a>

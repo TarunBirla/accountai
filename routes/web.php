@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminReminderController;
 use App\Http\Controllers\Admin\AdminServiceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Client\ClientDashboardController;
+use App\Http\Controllers\Client\ClientJourneyRequestController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\PublicLeadController;
 use App\Http\Controllers\SetupController;
@@ -44,6 +45,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Client Portal Routes (Role: client)
 Route::prefix('client')->middleware(['auth', 'role:client'])->name('client.')->group(function () {
     Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/requests', [ClientJourneyRequestController::class, 'index'])->name('requests.index');
+    Route::post('/requests/{stepId}', [ClientJourneyRequestController::class, 'submit'])->name('requests.submit');
     Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile');
     Route::post('/profile/password', [ClientProfileController::class, 'updatePassword'])->name('profile.password');
 });
@@ -59,8 +62,10 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::patch('/leads/{id}/status', [AdminLeadController::class, 'updateStatus'])->name('leads.status');
     Route::patch('/leads/{id}/notes', [AdminLeadController::class, 'updateNotes'])->name('leads.notes');
 
-    // Client Journey Timeline
+    // Client Journey Timeline & Stage Review
     Route::get('/journey', [AdminJourneyController::class, 'index'])->name('journey.index');
+    Route::get('/journey/{leadId}', [AdminJourneyController::class, 'show'])->name('journey.show');
+    Route::post('/journey/steps/{stepId}/review', [AdminJourneyController::class, 'reviewStep'])->name('journey.steps.review');
     Route::patch('/journey/steps/{stepId}/status', [AdminJourneyController::class, 'updateStepStatus'])->name('journey.steps.status');
 
     // Reminders
