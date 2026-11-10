@@ -31,7 +31,7 @@ class AdminJourneyController extends Controller
         // ONLY show the 12 stages details if a specific lead_id is requested!
         if ($selectedLeadId) {
             $selectedLead = Lead::with(['journeySteps', 'services'])->find($selectedLeadId);
-            if ($selectedLead && $selectedLead->journeySteps->count() < 12) {
+            if ($selectedLead) {
                 $this->ensureTwelveStages($selectedLead);
                 $selectedLead->load('journeySteps');
             }
@@ -101,7 +101,14 @@ class AdminJourneyController extends Controller
 
         foreach ($stages as $order => $stageData) {
             $existing = $lead->journeySteps->firstWhere('step_order', $order);
-            if (!$existing) {
+            if ($existing) {
+                if ($existing->title !== $stageData['title']) {
+                    $existing->update([
+                        'title' => $stageData['title'],
+                        'description' => $stageData['description'],
+                    ]);
+                }
+            } else {
                 $lead->journeySteps()->create([
                     'title' => $stageData['title'],
                     'description' => $stageData['description'],

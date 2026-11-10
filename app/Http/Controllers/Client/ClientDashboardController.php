@@ -24,7 +24,7 @@ class ClientDashboardController extends Controller
             ? $leads->firstWhere('id', $activeLeadId) ?? $leads->first()
             : $leads->first();
 
-        if ($selectedLead && $selectedLead->journeySteps->count() < 12) {
+        if ($selectedLead) {
             $stages = [
                 1 => ['title' => 'Lead & enquiry', 'description' => 'Lead ID created, source tagged, intent classified and routed to branch. Acknowledgement sent.'],
                 2 => ['title' => 'Qualification', 'description' => 'Questionnaire sent. Suggested annual accounts, corporation tax, VAT or payroll mapped.'],
@@ -41,7 +41,16 @@ class ClientDashboardController extends Controller
             ];
 
             foreach ($stages as $order => $stageData) {
-                if (!$selectedLead->journeySteps->firstWhere('step_order', $order)) {
+                $existingStep = $selectedLead->journeySteps->firstWhere('step_order', $order);
+                if ($existingStep) {
+                    // Normalize title and description if it had old legacy names
+                    if ($existingStep->title !== $stageData['title']) {
+                        $existingStep->update([
+                            'title' => $stageData['title'],
+                            'description' => $stageData['description'],
+                        ]);
+                    }
+                } else {
                     $selectedLead->journeySteps()->create([
                         'title' => $stageData['title'],
                         'description' => $stageData['description'],

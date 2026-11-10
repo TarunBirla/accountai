@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en-GB" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7,11 +7,9 @@
 <title>@yield('title', 'Admin Dashboard') – AccountAI Practice OS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
 <style>
-:root{--bg:#f3f5f9;--sf:#fff;--s2:#f8fafc;--tx:#0e1530;--mu:#64708a;--bd:#e3e8f0;--ac:#3a4bdc;--ac2:#0fb5a6;--ok:#12a36b;--wn:#d98a0b;--er:#dc3d4a;--sb:#0a1030;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--f:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--d:'Fraunces',Georgia,serif}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#070b1a;--sf:#101731;--s2:#0c1229;--tx:#e9edf8;--mu:#8e9ab8;--bd:#1f2a4a;--ac:#7c8bff;--ok:#2fd196;--wn:#f2b14a;--er:#ff6b77}}
-:root[data-theme=dark]{--bg:#070b1a;--sf:#101731;--s2:#0c1229;--tx:#e9edf8;--mu:#8e9ab8;--bd:#1f2a4a;--ac:#7c8bff;--ok:#2fd196;--wn:#f2b14a;--er:#ff6b77}
-*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 var(--f)}
+:root{--bg:#f8fafc;--sf:#ffffff;--s2:#f1f5f9;--tx:#0e1530;--mu:#64708a;--bd:#e2e8f0;--ac:#3a4bdc;--ac2:#0fb5a6;--ok:#12a36b;--wn:#d98a0b;--er:#dc3d4a;--sb:#0a1030;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--f:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--d:'Fraunces',Georgia,serif}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px);background:#f8fafc}
+body{margin:0;background:#f8fafc!important;color:#0e1530!important;font:14px/1.5 var(--f)}
 button,a.btn,input,select,textarea{font:inherit}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
@@ -88,19 +86,9 @@ setInterval(() => {
     if(clk) clk.textContent = new Date().toLocaleString("en-GB", {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
 }, 1000);
 
-// Theme Toggle
-const thBtn = $("#th");
-if (thBtn) {
-    thBtn.onclick = () => {
-        const r = document.documentElement;
-        const currentIsDark = getComputedStyle(r).getPropertyValue("--bg").trim() === "#070b1a" || r.dataset.theme === "dark";
-        r.dataset.theme = currentIsDark ? "light" : "dark";
-        localStorage.setItem("theme", r.dataset.theme);
-    };
-}
-if (localStorage.getItem("theme")) {
-    document.documentElement.dataset.theme = localStorage.getItem("theme");
-}
+// Force clean white light theme as default
+document.documentElement.dataset.theme = "light";
+localStorage.setItem("theme", "light");
 </script>
 @stack('scripts')
 </body>
