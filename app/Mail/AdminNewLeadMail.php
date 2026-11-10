@@ -4,13 +4,12 @@ namespace App\Mail;
 
 use App\Models\Lead;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminNewLeadMail extends Mailable implements ShouldQueue
+class AdminNewLeadMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -24,7 +23,7 @@ class AdminNewLeadMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "[New Lead - {$this->lead->source}] {$this->lead->full_name} ({$this->lead->company_name})",
+            subject: "[New Lead - {$this->lead->source}] {$this->lead->full_name} (" . ($this->lead->company_name ?? 'Individual') . ")",
         );
     }
 

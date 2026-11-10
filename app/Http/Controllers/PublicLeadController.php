@@ -8,7 +8,6 @@ use App\Mail\ClientWelcomeMail;
 use App\Models\Lead;
 use App\Models\Service;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -94,40 +93,46 @@ class PublicLeadController extends Controller
                 $lead->services()->sync($servicesToSync);
             }
 
-            // Default 5 Journey Steps
-            $steps = [
-                ['title' => 'Lead Received', 'description' => 'Enquiry captured and initial acknowledgment issued.', 'status' => 'done', 'step_order' => 1],
-                ['title' => 'Contacted', 'description' => 'Accountant initial consultation and requirements discovery.', 'status' => 'pending', 'step_order' => 2],
-                ['title' => 'Documents Collected', 'description' => 'Submission of necessary accounts, P60s, bank records, or invoices.', 'status' => 'pending', 'step_order' => 3],
-                ['title' => 'In Progress', 'description' => 'Active accounts computation, HMRC filing preparation, and review.', 'status' => 'pending', 'step_order' => 4],
-                ['title' => 'Completed', 'description' => 'Signed off, submitted to HMRC/Companies House, and reconciled.', 'status' => 'pending', 'step_order' => 5],
+            // Exactly 12 Connected Journey Stages (as per AccountAI Practice OS design)
+            $stages = [
+                ['title' => 'Lead & enquiry', 'description' => 'Lead ID created, source tagged, intent classified and routed to branch. Acknowledgement sent.', 'status' => 'done', 'step_order' => 1],
+                ['title' => 'Qualification', 'description' => 'Questionnaire sent. Suggested annual accounts, corporation tax, VAT or payroll mapped.', 'status' => 'pending', 'step_order' => 2],
+                ['title' => 'Consultation & quote', 'description' => 'Consultation notes, pricing template and proposal generated. Customer accepts online.', 'status' => 'pending', 'step_order' => 3],
+                ['title' => 'Registration', 'description' => 'Customer ID and secure portal created. Duplicate accounts prevented.', 'status' => 'pending', 'step_order' => 4],
+                ['title' => 'AML & compliance', 'description' => 'ID verification and risk assessment. Compliance officer approval is required.', 'status' => 'pending', 'step_order' => 5],
+                ['title' => 'Engagement', 'description' => 'Engagement letter generated from approved template and e-signed.', 'status' => 'pending', 'step_order' => 6],
+                ['title' => 'Payment', 'description' => 'Invoice and payment link sent. Webhook updates payment status automatically.', 'status' => 'pending', 'step_order' => 7],
+                ['title' => 'Document collection', 'description' => 'Personalised checklist, OCR classification, duplicate and readability checks.', 'status' => 'pending', 'step_order' => 8],
+                ['title' => 'Clarification', 'description' => 'Automated queries for missing periods and unclear items, linked to the case.', 'status' => 'pending', 'step_order' => 9],
+                ['title' => 'Allocation', 'description' => 'Release checks pass. Case allocated by skill, workload and deadline.', 'status' => 'pending', 'step_order' => 10],
+                ['title' => 'Processing & review', 'description' => 'Accountant works in existing accounting software. Reviewer approves.', 'status' => 'pending', 'step_order' => 11],
+                ['title' => 'Completion', 'description' => 'Delivery confirmed, payment reconciled, next-cycle reminders scheduled.', 'status' => 'pending', 'step_order' => 12],
             ];
 
-            foreach ($steps as $stepData) {
-                $lead->journeySteps()->create($stepData);
+            foreach ($stages as $stageData) {
+                $lead->journeySteps()->create($stageData);
             }
 
-            // Eager load services for emails
             $lead->load('services');
 
-            // 5. Send Welcome email to Client
+            // Send Welcome Email directly to Client via SMTP
             try {
-                Mail::to($lead->email)->queue(new ClientWelcomeMail($lead, $plainPassword, $isNewUser));
+                Mail::to($lead->email)->send(new ClientWelcomeMail($lead, $plainPassword, $isNewUser));
             } catch (\Throwable $e) {
-                Log::error('Failed to queue ClientWelcomeMail: ' . $e->getMessage());
+                Log::error('ClientWelcomeMail error: ' . $e->getMessage());
             }
 
-            // 6. Send Alert email to Admin
+            // Send Notification Email directly to Admin via SMTP
             $adminEmail = config('mail.admin_address', env('ADMIN_NOTIFICATION_EMAIL', 'admin@accountai.com'));
             try {
-                Mail::to($adminEmail)->queue(new AdminNewLeadMail($lead));
+                Mail::to($adminEmail)->send(new AdminNewLeadMail($lead));
             } catch (\Throwable $e) {
-                Log::error('Failed to queue AdminNewLeadMail: ' . $e->getMessage());
+                Log::error('AdminNewLeadMail error: ' . $e->getMessage());
             }
 
             return $lead;
         });
 
-        return back()->with('lead_success', 'Thank you, ' . $lead->first_name . '! Your enquiry has been received. Check your email for confirmation and Client Portal login details.');
+        return back()->with('lead_success', 'Thank you, ' . $lead->first_name . '! Your enquiry has been received. Check your email (' . $lead->email . ') for login credentials and client portal access.');
     }
 }
