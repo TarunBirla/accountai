@@ -65,6 +65,11 @@ class ClientJourneyRequestController extends Controller
             'submitted_at' => now(),
         ]);
 
-        return back()->with('success', "Details for Stage {$step->step_order} ('{$step->title}') submitted successfully. Your accountant will review and approve shortly.");
+        $nextStepOrder = min(12, $step->step_order + 1);
+
+        return redirect()->route('client.dashboard', [
+            'lead_id' => $step->lead_id,
+            'step' => $step->step_order < 12 ? $nextStepOrder : 12,
+        ])->with('success', "Stage {$step->step_order} ('{$step->title}') saved & submitted successfully. " . ($step->step_order < 12 ? "Proceeding to Stage {$nextStepOrder}." : "All 12 stages submitted."));
     }
 }
