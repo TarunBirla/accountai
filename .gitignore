@@ -13,6 +13,5 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-*.zip
 /storage/installed.lock
 /.well-known
