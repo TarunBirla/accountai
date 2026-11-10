@@ -60,10 +60,11 @@ class ClientJourneyRequestController extends Controller
 
         $step->update([
             'payload' => $payload,
+            'status' => 'submitted',
             'review_status' => 'submitted',
             'submitted_at' => now(),
         ]);
 
-        return back()->with('success', "Details for '{$step->title}' submitted successfully. Your accountant will review and approve shortly.");
+        return back()->with('success', "Details for Stage {$step->step_order} ('{$step->title}') submitted successfully. Your accountant will review and approve shortly.");
     }
 }

@@ -29,7 +29,7 @@ main{padding:22px 28px 60px;min-width:0}
 .top{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .top h1{font:600 24px var(--d);margin:0;flex:1;letter-spacing:-.3px}.top h1 small{display:block;font:400 13px var(--f);color:var(--mu);margin-top:2px}
 .pill{background:var(--sf);border:1px solid var(--bd);padding:7px 12px;border-radius:99px;font-size:12px;color:var(--mu)}
-.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0fb5a6,#3a4bdc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
 .g{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1.6fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
 .card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:18px;box-shadow:0 1px 2px #0b12301a,0 8px 24px -14px #0b123040}
 .card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}.card h3 em{font-style:normal;margin-left:auto;font-weight:400;color:var(--mu);font-size:12px}
@@ -66,7 +66,7 @@ main{padding:22px 28px 60px;min-width:0}
         </a>
         <nav>
             <a href="{{ route('client.dashboard') }}" class="{{ request()->routeIs('client.dashboard') ? 'on' : '' }}">
-                <span>◧</span> My Dashboard &amp; Leads
+                <span>⇄</span> Client Journey
             </a>
             <a href="{{ route('client.requests.index') }}" class="{{ request()->routeIs('client.requests.*') ? 'on' : '' }}">
                 <span>📋</span> Action Requests
