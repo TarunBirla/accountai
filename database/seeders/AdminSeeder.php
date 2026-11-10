@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
                 'name' => 'AccountAI Administrator',
                 'phone' => '+44 20 7946 0991',
                 'company' => 'AccountAI Practice HQ',
-                'password' => Hash::make('change-me'),
+                'password' => Hash::make('admin@123'),
                 'role' => 'admin',
             ]
         );

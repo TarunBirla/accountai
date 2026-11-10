@@ -16,4 +16,4 @@ Built with Laravel 11, Blade, MySQL, and modern UK practice workflow management.
 2. Visit `/setup/run-all?key=ACCOUNT_AI_SECURE_INSTALL_KEY_2026` in your browser.
 3. Sign in to admin panel at `/login`:
    - **Email:** `admin@accountai.com`
-   - **Password:** `change-me`
+   - **Password:** `admin@123`

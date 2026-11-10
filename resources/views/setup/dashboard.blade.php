@@ -183,7 +183,7 @@ h1 {
             </div>
             <div>
                 <span style="color:#c9d3ff; display:block; font-size:12px;">Default Password</span>
-                <code>change-me</code>
+                <code>admin@123</code>
             </div>
         </div>
         <small style="display:block; color:#8ea0d6; margin-top:10px;">For security, change this password immediately after your first sign in.</small>
