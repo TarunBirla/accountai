@@ -122,8 +122,8 @@ class PublicLeadController extends Controller
                 Log::error('ClientWelcomeMail error: ' . $e->getMessage());
             }
 
-            // Send Notification Email directly to Admin via SMTP
-            $adminEmail = config('mail.admin_address', env('ADMIN_NOTIFICATION_EMAIL', 'admin@accountai.com'));
+            // Send Notification Email directly to Admin via SMTP (configured via ADMIN_MAIL)
+            $adminEmail = env('ADMIN_MAIL', env('ADMIN_NOTIFICATION_EMAIL', 'tarun@thenexteck.com'));
             try {
                 Mail::to($adminEmail)->send(new AdminNewLeadMail($lead));
             } catch (\Throwable $e) {

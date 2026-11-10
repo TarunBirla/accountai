@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\JourneyStep;
 use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,7 @@ class ClientDashboardController extends Controller
                         'title' => $stageData['title'],
                         'description' => $stageData['description'],
                         'status' => $order === 1 ? 'done' : 'pending',
+                        'review_status' => $order === 1 ? 'approved' : 'pending',
                         'step_order' => $order,
                     ]);
                 }
@@ -52,6 +54,42 @@ class ClientDashboardController extends Controller
             $selectedLead->load('journeySteps');
         }
 
-        return view('client.dashboard', compact('user', 'leads', 'selectedLead'));
+        // Determine which of the 12 steps the client is viewing / filling
+        $steps = $selectedLead ? $selectedLead->journeySteps->sortBy('step_order') : collect();
+        $requestedStepOrder = (int) $request->query('step', 0);
+
+        if ($requestedStepOrder > 0 && $steps->firstWhere('step_order', $requestedStepOrder)) {
+            $currentStep = $steps->firstWhere('step_order', $requestedStepOrder);
+        } else {
+            // Default to first pending or revision-required step, or step 1
+            $currentStep = $steps->firstWhere('status', 'needs_revision')
+                ?? $steps->firstWhere('status', 'pending')
+                ?? $steps->firstWhere('status', 'submitted')
+                ?? $steps->first();
+        }
+
+        return view('client.dashboard', compact('user', 'leads', 'selectedLead', 'steps', 'currentStep'));
+    }
+
+    public function saveStepData(Request $request, $stepId)
+    {
+        $user = Auth::user();
+        $step = JourneyStep::with('lead')->findOrFail($stepId);
+
+        if (!$step->lead || $step->lead->user_id !== $user->id) {
+            abort(403, 'Unauthorized access to this journey step.');
+        }
+
+        // Collect all parameters without strict "required" blockers
+        $payload = $request->except(['_token', '_method']);
+
+        $step->update([
+            'payload' => $payload,
+            'status' => 'submitted',
+            'review_status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        return back()->with('success', "Stage {$step->step_order} ('{$step->title}') details saved successfully and submitted to your accountant for review.");
     }
 }
