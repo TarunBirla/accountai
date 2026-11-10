@@ -70,7 +70,7 @@ footer a{color:#c7d0ee;text-decoration:none}footer a:hover{color:#fff}
                     <a href="{{ route('client.dashboard') }}" class="btn sm">Client Portal</a>
                 @endif
             @else
-                <a href="{{ route('login') }}" class="btn sm outline">Client &amp; Staff Login</a>
+                <a href="{{ route('login') }}" class="btn sm outline"> Login</a>
             @endauth
         </nav>
     </div>
