@@ -89,20 +89,28 @@
 }
 .parameter-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 8px;
-    background: var(--s2);
-    border: 1px solid var(--bd);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 10px;
+    padding: 12px;
     margin: 8px 0;
-    font-size: 12px;
+    font-size: 12.5px;
+}
+.param-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 8px 10px;
+    border-radius: 6px;
 }
 .param-item strong {
     display: block;
     font-size: 11px;
     color: var(--mu);
     text-transform: capitalize;
+    margin-bottom: 2px;
+}
 }
 </style>
 @endpush
