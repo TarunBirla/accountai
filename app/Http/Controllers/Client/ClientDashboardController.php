@@ -136,7 +136,7 @@ class ClientDashboardController extends Controller
                 'email' => $user->email,
                 'phone' => $request->input('phone') ?: ($user->phone ?: 'N/A'),
                 'company_name' => $companyName,
-                'source' => 'client_portal',
+                'source' => 'website',
                 'status' => 'new',
                 'notes' => $request->input('notes') ?: ('New service request submitted from Client Portal on ' . now()->format('d M Y H:i')),
             ]);
