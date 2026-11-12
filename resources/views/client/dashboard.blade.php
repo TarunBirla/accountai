@@ -184,19 +184,50 @@
     <div class="card" style="text-align: center; padding: 40px 20px; background:#ffffff;">
         <h3>No Client Onboarding Cases Found</h3>
         <p style="color:var(--mu);">You do not currently have any active enquiries or onboarding workflows linked to your account.</p>
-        <a href="{{ route('home') }}" class="btn">Explore Our UK Accountancy Services &rarr;</a>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
+            <a href="{{ route('client.new-request') }}" class="btn">➕ Submit New Service Request</a>
+            <a href="{{ route('home') }}" class="btn s">Explore Our UK Accountancy Services &rarr;</a>
+        </div>
     </div>
 @else
 
+    <!-- Client Welcome & Quick Action Card -->
+    <div class="card" style="margin-bottom: 16px; padding: 18px 20px; background:#ffffff; border-left: 4px solid #3a4bdc;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h2 style="font-size:18px; margin:0 0 4px; color:#0e1530;">Welcome, {{ $user->name }} 👋</h2>
+                <div style="font-size:13px; color:#64708a;">
+                    Active Case: <b style="color:#0e1530;">#{{ $selectedLead->id }} &middot; {{ $selectedLead->company_name ?: $selectedLead->full_name }}</b>
+                    @if($selectedLead->services->isNotEmpty())
+                        &middot; Services: 
+                        @foreach($selectedLead->services as $svc)
+                            <span class="tag" style="font-size:11px; margin-right:2px;">{{ $svc->name }}</span>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <a href="{{ route('client.new-request') }}" class="btn sm" style="background:#3a4bdc; color:#fff !important;">
+                    <span>➕</span> Add New Request
+                </a>
+            </div>
+        </div>
+    </div>
+
     @if($leads->count() > 1)
         <div class="card" style="margin-bottom: 16px; padding: 12px 18px; background:#ffffff;">
-            <div style="display:flex; align-items:center; gap: 10px; flex-wrap:wrap;">
-                <span style="font-weight:600; font-size:13px; color:var(--mu);">Select Active Case:</span>
-                @foreach($leads as $l)
-                    <a href="{{ route('client.dashboard', ['lead_id' => $l->id]) }}" class="btn sm {{ $selectedLead->id == $l->id ? '' : 's' }}">
-                        #{{ $l->id }} · {{ $l->company_name ?: $l->full_name }} ({{ $l->created_at->format('M Y') }})
-                    </a>
-                @endforeach
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap: 10px;">
+                <div style="display:flex; align-items:center; gap: 8px; flex-wrap:wrap;">
+                    <span style="font-weight:600; font-size:13px; color:var(--mu);">Select Active Case:</span>
+                    @foreach($leads as $l)
+                        <a href="{{ route('client.dashboard', ['lead_id' => $l->id]) }}" class="btn sm {{ $selectedLead->id == $l->id ? '' : 's' }}">
+                            #{{ $l->id }} · {{ $l->company_name ?: $l->full_name }} ({{ $l->created_at->format('M Y') }})
+                        </a>
+                    @endforeach
+                </div>
+                <a href="{{ route('client.new-request') }}" class="btn sm s" style="color: #3a4bdc !important;">
+                    + New Request
+                </a>
             </div>
         </div>
     @endif

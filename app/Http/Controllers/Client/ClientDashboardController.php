@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AdminNewLeadMail;
 use App\Models\JourneyStep;
 use App\Models\Lead;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ClientDashboardController extends Controller
 {
@@ -101,5 +106,167 @@ class ClientDashboardController extends Controller
         ]);
 
         return back()->with('success', "Stage {$step->step_order} ('{$step->title}') details saved successfully and submitted to your accountant for review.");
+    }
+
+    public function createRequest()
+    {
+        $user = Auth::user();
+        $businessServices = Service::active()->business()->get();
+        $personalServices = Service::active()->personal()->get();
+        $recentLeads = Lead::where('user_id', $user->id)->with('services')->latest()->take(5)->get();
+
+        return view('client.new-request', compact('user', 'businessServices', 'personalServices', 'recentLeads'));
+    }
+
+    public function storeRequest(Request $request)
+    {
+        $user = Auth::user();
+
+        $lead = DB::transaction(function () use ($request, $user) {
+            $nameParts = explode(' ', trim($user->name), 2);
+            $firstName = $nameParts[0] ?? 'Valued';
+            $lastName = $nameParts[1] ?? 'Client';
+
+            $companyName = $request->input('company_name') ?: ($user->company ?: null);
+
+            $lead = Lead::create([
+                'user_id' => $user->id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $user->email,
+                'phone' => $request->input('phone') ?: ($user->phone ?: 'N/A'),
+                'company_name' => $companyName,
+                'source' => 'client_portal',
+                'status' => 'new',
+                'notes' => $request->input('notes') ?: ('New service request submitted from Client Portal on ' . now()->format('d M Y H:i')),
+            ]);
+
+            $serviceIds = array_filter(array_merge(
+                (array) $request->input('business_services', []),
+                (array) $request->input('personal_services', [])
+            ));
+
+            if (!empty($serviceIds)) {
+                $lead->services()->sync($serviceIds);
+            }
+
+            // Exactly 12 UK Journey Stages
+            $stages = [
+                [
+                    'title' => 'Lead & enquiry',
+                    'description' => 'Lead ID created via client portal, service scope tagged. Initial acknowledgment logged.',
+                    'status' => 'done',
+                    'review_status' => 'approved',
+                    'approved_at' => now(),
+                    'step_order' => 1,
+                    'payload' => [
+                        'source' => 'client_portal',
+                        'business_structure' => $request->input('business_structure'),
+                        'turnover' => $request->input('turnover'),
+                        'vat_status' => $request->input('vat_status'),
+                        'employee_count' => $request->input('employee_count'),
+                        'urgency' => $request->input('urgency'),
+                        'notes' => $request->input('notes'),
+                        'requested_at' => now()->toIso8601String(),
+                    ],
+                ],
+                [
+                    'title' => 'Qualification',
+                    'description' => 'Questionnaire sent. Suggested annual accounts, corporation tax, VAT or payroll mapped.',
+                    'status' => 'pending',
+                    'review_status' => 'action_required',
+                    'step_order' => 2,
+                ],
+                [
+                    'title' => 'Consultation & quote',
+                    'description' => 'Consultation notes, pricing template and proposal generated. Customer accepts online.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 3,
+                ],
+                [
+                    'title' => 'Registration',
+                    'description' => 'Customer ID and secure portal created. Duplicate accounts prevented.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 4,
+                ],
+                [
+                    'title' => 'AML & compliance',
+                    'description' => 'ID verification and risk assessment. Compliance officer approval is required.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 5,
+                ],
+                [
+                    'title' => 'Engagement',
+                    'description' => 'Engagement letter generated from approved template and e-signed.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 6,
+                ],
+                [
+                    'title' => 'Payment',
+                    'description' => 'Invoice and payment link sent. Webhook updates payment status automatically.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 7,
+                ],
+                [
+                    'title' => 'Document collection',
+                    'description' => 'Personalised checklist, OCR classification, duplicate and readability checks.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 8,
+                ],
+                [
+                    'title' => 'Clarification',
+                    'description' => 'Automated queries for missing periods and unclear items, linked to the case.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 9,
+                ],
+                [
+                    'title' => 'Allocation',
+                    'description' => 'Release checks pass. Case allocated by skill, workload and deadline.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 10,
+                ],
+                [
+                    'title' => 'Processing & review',
+                    'description' => 'Accountant works in existing accounting software. Reviewer approves.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 11,
+                ],
+                [
+                    'title' => 'Completion',
+                    'description' => 'Delivery confirmed, payment reconciled, next-cycle reminders scheduled.',
+                    'status' => 'pending',
+                    'review_status' => 'locked',
+                    'step_order' => 12,
+                ],
+            ];
+
+            foreach ($stages as $stageData) {
+                $lead->journeySteps()->create($stageData);
+            }
+
+            $lead->load('services');
+
+            // Notify Admin by email
+            $adminEmail = env('ADMIN_MAIL', env('ADMIN_NOTIFICATION_EMAIL', 'tarun@thenexteck.com'));
+            try {
+                Mail::to($adminEmail)->send(new AdminNewLeadMail($lead));
+            } catch (\Throwable $e) {
+                Log::error('AdminNewLeadMail from client portal error: ' . $e->getMessage());
+            }
+
+            return $lead;
+        });
+
+        return redirect()->route('client.dashboard', ['lead_id' => $lead->id, 'step' => 2])
+            ->with('success', 'Your new service enquiry #' . $lead->id . ' has been created successfully! You can now complete Stage 2 details below or wait for your dedicated practice accountant.');
     }
 }

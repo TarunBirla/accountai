@@ -45,6 +45,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Client Portal Routes (Role: client)
 Route::prefix('client')->middleware(['auth', 'role:client'])->name('client.')->group(function () {
     Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/new-request', [ClientDashboardController::class, 'createRequest'])->name('new-request');
+    Route::post('/new-request', [ClientDashboardController::class, 'storeRequest'])->name('new-request.store');
     Route::get('/requests', [ClientJourneyRequestController::class, 'index'])->name('requests.index');
     Route::post('/requests/{stepId}', [ClientJourneyRequestController::class, 'submit'])->name('requests.submit');
     Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile');

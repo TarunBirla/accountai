@@ -150,6 +150,9 @@ main{padding:22px 28px 60px;min-width:0;background:#f8fafc}
             <a href="{{ route('client.dashboard') }}" class="{{ request()->routeIs('client.dashboard') ? 'on' : '' }}">
                 <span>⇄</span> Client Journey
             </a>
+            <a href="{{ route('client.new-request') }}" class="{{ request()->routeIs('client.new-request*') ? 'on' : '' }}">
+                <span>➕</span> Add New Request
+            </a>
             <a href="{{ route('client.requests.index') }}" class="{{ request()->routeIs('client.requests.*') ? 'on' : '' }}">
                 <span>📋</span> Action Requests
             </a>
